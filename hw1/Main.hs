@@ -243,42 +243,27 @@ tzip = "zip" ~:
 --
 -- transpose is defined in Data.List
 
-takeFirstEle :: [a] -> (a, [a])
-takeFirstEle [] = error "cant be empty"
-takeFirstEle (x:xs)  = (x,xs)
-
 containsEmpty :: [[a]] -> Bool
-containsEmpty lst@(lst0:ls) =
+containsEmpty lst =
   case lst of
     [] -> False
-    _ -> case lst0 of
+    x:xs -> case x of
       [] -> True
-      _ -> allNonEmpty ls
-
-allTakeFirst :: [[a]] -> ([a],[[a]])
-allTakeFirst l =
-  case allNonEmpty l of
-    True -> ([],[])
-    _ -> case l of
-      [] -> ([],[])
-      l0:ls -> (a:as, b:bs) where
-        (a,b) = takeFirstEle l0
-        (as,bs) = allTakeFirst ls
+      _ -> containsEmpty xs
 
 transpose :: [[a]] -> [[a]]
-transpose matrix =
-  case matrix of
-    [] -> []
-    _ -> case allTakeFirst matrix of
-      ([],[]) -> [] 
-      (res, left) -> res:transpose left
+transpose matrix 
+  | containsEmpty matrix = []
+  | otherwise = case matrix of
+      [] -> []
+      xs -> [h | (h:_) <- xs] : transpose [t | (_:t) <- xs] 
 
 ttranspose :: Test
 ttranspose = "transpose" ~:
   TestList [ transpose [[1,2,3],[4,5,6]] ~?= [[1,4],[2,5],[3,6]],
              transpose  [[1,2],[3,4,5]] ~?= [[1,3], [2,4]],
              transpose [[1,4],[2,5],[3,6]] ~?= [[1,2,3],[4,5,6]],
-             transpose [[1,2],[]] ~?= [[]]
+             transpose [[1,2],[]] ~?= []
            ]
   
 -- concat
@@ -290,13 +275,20 @@ ttranspose = "transpose" ~:
 -- NOTE: remember you cannot use any functions from the Prelude or Data.List for
 -- this problem, even for use as a helper function.
 
-concat :: [a] -> a
-concat [] = []
-concat (x:y:xs) = concat (x++y):xs
-concat [x] = x
+concat :: [[a]] -> [a]
+concat lst =
+  case lst of
+    [] -> []
+    []:xs -> concat xs 
+    (x:xs):xss -> x: concat (xs:xss)
  
 tconcat :: Test
-tconcat = "concat" ~: assertFailure "testcase for concat"
+tconcat = "concat" ~:
+  TestList [ concat [[1,2,3],[4,5,6],[7,8,9]] ~?= [1,2,3,4,5,6,7,8,9],
+             concat [[],[2,4],[6],[8,10]] ~?= [2,4,6,8,10],
+             concat [[]::[Int]] ~?= [],
+             concat ([]::[[Int]]) ~?= []
+           ]
 
 -- mapMaybe
  
@@ -315,7 +307,11 @@ mapMaybe f lst =
       Just a -> a : mapMaybe f xs
           
 tmapMaybe :: Test
-tmapMaybe = "mapMaybe" ~: assertFailure "testcase for mapMaybe"
+tmapMaybe = "mapMaybe" ~:
+  TestList [ mapMaybe root [0.0, -1.0, 4.0] ~?= [0.0,2.0],
+             mapMaybe root [] ~?= [],
+             mapMaybe root [0.0, 1.0, 4.0, -8.0] ~?= [0.0, 1.0, 2.0]
+           ]
 
 -- countSub sub str
  
@@ -324,8 +320,34 @@ tmapMaybe = "mapMaybe" ~: assertFailure "testcase for mapMaybe"
 -- for example:
 --      countSub "aa" "aaa" returns 2
 
+countSub :: String -> String -> Int
+countSub sub s =
+  case (sub,s) of
+    ("",_) -> 0
+    (_,"") -> 0
+    (_,s@(x:xs)) -> if countSubAux sub s then 1 + subCount else subCount
+      where subCount = countSub sub xs  
+
+-- | countSub_aux: return whether the string starts with the substring
+
+countSubAux :: String -> String -> Bool
+countSubAux sub s =
+  case (sub,s) of
+    ("",_) -> True
+    (_,"") -> False
+    (x:xs,y:ys) -> x == y && countSubAux xs ys 
+
 tcountSub :: Test
-tcountSub = "countSub" ~: assertFailure "testcase for countSub"
+tcountSub = "countSub" ~:
+  TestList [ countSub "aa" "aaa" ~?= 2,
+             countSub "  " "   " ~?= 2,
+             countSub "" "aaa" ~?= 0,
+             countSub "d" "" ~?= 0,
+             countSub "" "" ~?= 0,
+             countSub "bcd" "abcdefg" ~?= 1,
+             countSub "aa" "aaaababaabaaa" ~?= 6
+           ]
+
 
 -- splitBy pred lst
 --
@@ -336,12 +358,35 @@ tcountSub = "countSub" ~: assertFailure "testcase for countSub"
 --            ["four","score","and","seven","years"]
 --      splitBy isSpace "" returns []
 
+splitBy :: (a -> Bool) -> [a] -> [[a]]
+splitBy f lst =
+  case lst of
+    [] -> []
+    _ -> res_h : splitBy f res_t
+      where
+        (res_h, res_t) = splitByAux f lst  
+
+splitByAux :: (a -> Bool) -> [a] -> ([a], [a])
+splitByAux f lst =
+  case lst of
+    [] -> ([],[])
+    x:xs -> if f x then ([],xs) else (x:res_x, res_xs)
+      where
+        (res_x, res_xs) = splitByAux f xs
+
 isSpace :: Char -> Bool
 isSpace ' ' = True
 isSpace  _  = False
 
 tsplitBy :: Test
-tsplitBy = "splitBy" ~: assertFailure "testcase for splitBy"
+tsplitBy = "splitBy" ~:
+  TestList [ splitBy isSpace "four score and seven years" ~?=
+             ["four","score","and","seven","years"],
+             splitBy isSpace "" ~?= [],
+             splitBy isSpace " four " ~?= ["","four"],
+             splitBy isSpace " four" ~?= ["","four"],
+             splitBy isSpace "  four star  ?" ~?= ["","","four", "star","","?"]
+           ]
 
 --------------------------------------------------------------------------------
 
