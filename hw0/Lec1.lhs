@@ -1,3 +1,7 @@
+HW0 
+Dongni Wang
+2017/1/17
+
 CIS 552 Lecture 1
 =================
 
@@ -7,7 +11,7 @@ ignored by the Haskell compiler. The
 [html](http://www.cis.upenn.edu/~cis552/current/lectures/Lec1.html) is
 generated directly from the
 [lhs](http://www.cis.upenn.edu/~cis552/current/lectures/Lec1.lhs) version
-of the lecture notes. Feel free to download the source code and play
+of the lecture notes.Feel free to download the source code and play
 with it yourself after class. You'll need to turn in a version of this file
 for the zeroth homework assignment.
 
@@ -308,28 +312,31 @@ First, follow the [homework instructions](http://www.cis.upenn.edu/~cis552/homew
 `undefined` below with your answers.
 
 > name :: String
-> name = undefined
+> name = "Dongni Wang"
 
 > pennkey :: String
-> pennkey = undefined
+> pennkey = "wdongni"
 
 Your github userid. 
 
 > githubUserId :: String
-> githubUserId = undefined
+> githubUserId = "dwang9302"
 
 Write a few sentences about your programming background. What
 languages have you used before? What is the size of the largest
 programs you have written in those languages?
 
 > programmingExperience :: String
-> programmingExperience = undefined
+> programmingExperience = "I have used Python, Haskell, Prolog,\
+> \Java, C++, C, MATLAB before. The largest programs I have\
+> \written is in Java, with ~10K lines of codes."
 
 What do you hope to get from CIS 552?  What do you expect to learn
 from the course?
 
 > desiredOutcome :: String
-> desiredOutcome = undefined
+> desiredOutcome = "I hope to be a better programmer - better at \
+> \abstraction, organization, logic, etc."
 
 
 

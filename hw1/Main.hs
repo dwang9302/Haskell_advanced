@@ -393,29 +393,61 @@ tsplitBy = "splitBy" ~:
 -- Part One: Weather Data
 
 weather :: String -> String
-weather str = error "unimplemented"
- 
+weather str = words (rows !! row_i) !! 0 
+  where
+    rows = drop 2 (lines str)
+    diff = absDiff (extractCols 1 rows) (extractCols 2 rows)
+    row_i = r_i where Just r_i = List.elemIndex (minimum diff) diff
 
 weatherProgram :: IO ()
 weatherProgram = do
   str <- readFile "weather.dat"
   putStrLn (weather str)
 
+-- Get String that could be read as Int
+-- ex: "0*" -> "0", "1.234" -> "1"
+
+getIntStr :: String -> String
+getIntStr l =
+  case l of
+    [] -> []
+    x:xs -> if Char.isNumber x then x : getIntStr xs else []
+
 readInt :: String -> Int
-readInt = read
+readInt = read 
+
+-- Extract target columns 
+
+extractCols :: Int -> [String] ->[String]
+extractCols col_i l =
+  case l of
+    [] -> []
+    x:xs -> if length (words x) < col_i then skipped else (words x !! col_i) : skipped
+      where skipped = extractCols col_i xs
+
+-- Get the absolute difference between two list of same-length string that can be read
+-- as integers 
+
+absDiff :: [String] -> [String] -> [Int]
+absDiff [] _ = []::[Int]
+absDiff _ [] = []::[Int]
+absDiff (x:xs) (y:ys) = abs (readInt (getIntStr y) - (readInt (getIntStr x))) : absDiff xs ys
 
 testWeather :: Test
 testWeather = "weather" ~: do str <- readFile "weather.dat"
-                              weather str @?= "9"
+                              weather str @?= "14"
 
 --------
 
 -- Part Two: Soccer League Table
 
 soccer :: String -> String
-soccer = error "unimplemented"
+soccer str = words (rows !! row_i) !! 1
+  where
+    rows = drop 1 (lines str)
+    diff = absDiff (extractCols 6 rows) (extractCols 8 rows)
+    row_i = r_i where Just r_i = List.elemIndex (minimum diff) diff
  
-
 soccerProgram :: IO ()
 soccerProgram = do
   str <- readFile "football.dat"
@@ -424,15 +456,23 @@ soccerProgram = do
 testSoccer :: Test
 testSoccer = "soccer" ~: do
   str <- readFile "football.dat"
-  soccer str @?= "Arsenal"
+  soccer str @?= "Aston_Villa"
 
 -- Part Three: DRY Fusion
+-- Common Function: get the target col by min of the difference between two specified cols
+
+getTargetByMin :: String -> Int -> (Int, Int) -> Int -> String
+getTargetByMin str drop_n (col1_i,col2_i) target_i = words (rows !! row_i) !! target_i
+  where
+    rows = drop drop_n (lines str)
+    diff = absDiff (extractCols col1_i rows) (extractCols col2_i rows)
+    row_i = r_i where Just r_i = List.elemIndex (minimum diff) diff
 
 weather2 :: String -> String
-weather2 = undefined
+weather2 str = getTargetByMin str 2 (1,2) 0
  
 soccer2 :: String -> String
-soccer2 = undefined
+soccer2 str = getTargetByMin str 1 (6,8) 1
 
 -- Kata Questions
 
@@ -440,19 +480,25 @@ soccer2 = undefined
 -- programs make it easier or harder to factor out common code?
  
 shortAnswer1 :: String
-shortAnswer1 = "Fill in your answer here"
+shortAnswer1 = "It made the refactoring much easier. I only changed a few lines that\
+\are in charge of different parameters across the two functions."
 
 -- Was the way you wrote the second program influenced by writing the first?
  
 shortAnswer2 :: String
-shortAnswer2 = "Fill in your answer here"
+shortAnswer2 = "Yes, largely."
 
 -- Is factoring out as much common code as possible always a good thing? Did the
 -- readability of the programs suffer because of this requirement? How about the
 -- maintainability?
  
 shortAnswer3 :: String
-shortAnswer3 = "Fill in your answer here"
+shortAnswer3 = "It may not be always good. Some data may look different\
+\and require different processing. Putting all ways of handling cases together\
+\may work fine but harm the readability of the programs. Once one case changes,\
+\we need to be extra careful when refactoring the common code as it may also\
+\impact other functions that use the code and cause problems. Therefore it could\
+\harm the maintainbility of the codes."
 
 
 
