@@ -1,8 +1,8 @@
---HW1 (Dongni Wang; 2017/1/17) 
+--HW1 (Dongni Wang, Wei Hu; 2017/1/23)
 
 {-# OPTIONS -fwarn-incomplete-patterns -fwarn-tabs #-}
 
-{-# OPTIONS -fdefer-type-errors  #-}
+{-# OPTIONS -fdefer-type-errors  -Werror #-}
 
 module Main where
 import Prelude hiding (takeWhile, all, zip, reverse, concat)
@@ -393,7 +393,7 @@ tsplitBy = "splitBy" ~:
 -- Part One: Weather Data
 
 weather :: String -> String
-weather str = words (rows !! row_i) !! 0 
+weather str = head (words (rows !! row_i)) 
   where
     rows = drop 2 (lines str)
     diff = absDiff (extractCols 1 rows) (extractCols 2 rows)
@@ -431,7 +431,7 @@ extractCols col_i l =
 absDiff :: [String] -> [String] -> [Int]
 absDiff [] _ = []::[Int]
 absDiff _ [] = []::[Int]
-absDiff (x:xs) (y:ys) = abs (readInt (getIntStr y) - (readInt (getIntStr x))) : absDiff xs ys
+absDiff (x:xs) (y:ys) = abs (readInt (getIntStr y) - readInt (getIntStr x)) : absDiff xs ys
 
 testWeather :: Test
 testWeather = "weather" ~: do str <- readFile "weather.dat"
